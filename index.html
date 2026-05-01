@@ -175,40 +175,41 @@
 
     // ANA KONTROL FONKSİYONU
     async function check() {
-        if (!classifier) {
-            alert("Lütfen yapay zekanın yüklenmesini bekleyin...");
-            return;
-        }
-
-        const data = levels[current];
-        
-        // 1. Harf Kontrolü
-        let lettersCorrect = true;
-        data.letters.forEach((char, i) => {
-            const val = document.getElementById(`L${i}`).value.toUpperCase();
-            if(val !== char) lettersCorrect = false;
-        });
-
-        if(!lettersCorrect) {
-            alert("Harfler henüz doğru değil!");
-            return;
-        }
-
-        // 2. Çizim Kontrolü (AI v1.x Standardı)
-        const canvas = document.getElementById('cvs');
-        const results = await classifier.classify(canvas);
-        
-        const topResult = results[0].label;
-        console.log("Tahmin:", topResult, "Güven:", results[0].confidence);
-
-        if (topResult === data.doodleLabel) {
-            alert("Mükemmel! Hem harfler hem çizim doğru.");
-            current = (current + 1) % levels.length;
-            init();
-        } else {
-            alert("Harfler doğru ama çizimin bir '" + topResult + "' gibi görünüyor. Lütfen daha net bir " + data.drawPart + " çiz!");
-        }
+    if (!classifier) {
+        alert("Yapay zeka henüz yüklenmedi!");
+        return;
     }
+
+    const data = levels[current];
+    
+    // 1. Harf Kontrolü
+    let lettersCorrect = true;
+    data.letters.forEach((char, i) => {
+        const val = document.getElementById(`L${i}`).value.toUpperCase();
+        if(val !== char) lettersCorrect = false;
+    });
+
+    if(!lettersCorrect) {
+        alert("Harfler Yanlış!"); // Sadece direkt mesaj
+        return;
+    }
+
+    // 2. Çizim Kontrolü
+    const canvas = document.getElementById('cvs');
+    const results = await classifier.classify(canvas);
+    
+    const topResult = results[0].label;
+    // Konsolda ne gördüğünü hala takip edebilirsin (hata ayıklamak için)
+    console.log("AI Tahmini:", topResult);
+
+    if (topResult === data.doodleLabel) {
+        alert("Doğru!"); // Sadece direkt mesaj
+        current = (current + 1) % levels.length;
+        init();
+    } else {
+        alert("Yanlış Çizim!"); // Karmaşık cümle yerine direkt mesaj
+    }
+}
 
     function clearDraw() { 
         const c = document.getElementById('cvs');
