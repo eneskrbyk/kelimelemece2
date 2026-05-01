@@ -1,0 +1,7 @@
+[
+  { "word": "ELMA", "segments": [{"type":"draw","value":"EL","label":"hand"},{"type":"text","value":"MA"}] },
+  { "word": "BARIŞ", "segments": [{"type":"text","value":"B"},{"type":"draw","value":"ARI","label":"bee"},{"type":"text","value":"Ş"}] },
+  { "word": "ATLAS", "segments": [{"type":"draw","value":"AT","label":"horse"},{"type":"text","value":"LAS"}] },
+  { "word": "AYAK", "segments": [{"type":"draw","value":"AY","label":"moon"},{"type":"text","value":"AK"}] },
+  { "word": "YAYLA", "segments": [{"type":"draw","value":"YAY","label":"bow"},{"type":"text","value":"LA"}] }
+]
