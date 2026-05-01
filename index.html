@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Resimli Kelime Tamamlama AI</title>
-    <!-- ML5.JS v1.x Kütüphanesi -->
+    <title>Resimli Kelime Oyunu AI</title>
     <script src="https://unpkg.com/ml5@latest/dist/ml5.min.js"></script>
     <style>
         :root {
@@ -19,48 +18,46 @@
         body { margin: 0; background: var(--bg); color: #fff; display: flex; align-items: center; justify-content: center; height: 100vh; overflow: hidden; }
 
         #game-container {
-            width: 92%; max-width: 420px; background: var(--card);
+            width: 92%; max-width: 460px; background: var(--card);
             padding: 25px; border-radius: 45px; text-align: center;
             box-shadow: 0 30px 60px rgba(0,0,0,0.6);
         }
 
         .header { display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--primary); font-weight: bold; margin-bottom: 10px; }
-        .target-word { font-size: 3.2rem; font-weight: 900; color: var(--accent); margin: 0; text-transform: uppercase; letter-spacing: 2px; }
+        .target-word { font-size: 3rem; font-weight: 900; color: var(--accent); margin: 0; text-transform: uppercase; letter-spacing: 2px; }
         .instruction { font-size: 1rem; color: #94a3b8; margin: 10px 0 20px 0; font-weight: bold; }
 
         .game-row {
             display: flex; flex-direction: row; justify-content: center;
-            align-items: flex-end; gap: 10px; margin-bottom: 25px;
+            align-items: flex-end; gap: 8px; margin-bottom: 25px; flex-wrap: wrap;
         }
 
         .canvas-box {
             background: #fff; border: 4px solid var(--primary);
-            border-radius: 20px; width: 140px; height: 140px;
+            border-radius: 20px; width: 120px; height: 120px;
             position: relative; flex-shrink: 0; overflow: hidden;
         }
-        /* AI için 280x280 idealdir ama ekranda 140px görünür */
         canvas { width: 100%; height: 100%; cursor: crosshair; touch-action: none; }
 
         .letter-box {
-            background: #fff; width: 65px; height: 100px;
-            border-radius: 20px; display: flex; flex-direction: column;
-            justify-content: center; align-items: center; box-shadow: 0 6px 0 #cbd5e1;
+            background: #fff; width: 55px; height: 90px;
+            border-radius: 18px; display: flex; flex-direction: column;
+            justify-content: center; align-items: center; box-shadow: 0 5px 0 #cbd5e1;
         }
 
         .letter-box input {
             width: 80%; border: none; border-bottom: 3px solid var(--primary);
-            text-align: center; font-size: 2rem; font-weight: bold;
+            text-align: center; font-size: 1.8rem; font-weight: bold;
             color: #2d3436; outline: none; background: transparent;
         }
 
-        .box-label { font-size: 0.6rem; color: #636e72; margin-top: 5px; font-weight: bold; }
+        .box-label { font-size: 0.5rem; color: #636e72; margin-top: 5px; font-weight: bold; }
 
         .btn-check {
             width: 100%; padding: 20px; background: var(--primary); color: white;
             border: none; border-radius: 22px; font-size: 1.5rem; font-weight: 900;
-            cursor: pointer; box-shadow: 0 8px 0 #4834d4; transition: 0.2s;
+            cursor: pointer; box-shadow: 0 8px 0 #4834d4;
         }
-        .btn-check:active { transform: translateY(4px); box-shadow: 0 4px 0 #4834d4; }
 
         .hint-btn {
             margin-top: 15px; background: rgba(255,159,67,0.1);
@@ -73,175 +70,134 @@
 
 <div id="game-container">
     <div class="header"><span id="status">YÜKLENİYOR...</span><span>∞</span></div>
-    <div class="target-word" id="target">ELMA</div>
-    <div class="instruction">Eksik parçayı çiz ve harfleri yaz!</div>
+    <div class="target-word" id="target">YÜKLENİYOR</div>
+    <div class="instruction">Çizimi yap ve harfleri tamamla!</div>
 
     <div class="game-row" id="game-row"></div>
 
-    <button class="btn-check" id="checkBtn" onclick="check()">KONTROL ET</button>
-    <div class="hint-btn" onclick="playAd()">📺 Reklam İzle & İpucu Al</div>
+    <button class="btn-check" onclick="check()">KONTROL ET</button>
+    <div class="hint-btn" onclick="playAd()">📺 İpucu Al</div>
     <p style="color:#64748b; font-size:0.7rem; margin-top:15px; cursor:pointer;" onclick="clearDraw()">Çizimi Temizle</p>
 </div>
 
-<div id="ad-view" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.95); z-index:99; align-items:center; justify-content:center; flex-direction:column;">
-    <p>Reklam İzleniyor... <span id="ad-sec">3</span></p>
-</div>
-
 <script>
-    const levels = [
-        { word: "ELMA", drawPart: "EL", doodleLabel: "hand", letters: ["M", "A"] },
-        { word: "GÜNEŞ", drawPart: "GÜN", doodleLabel: "sun", letters: ["E", "Ş"] },
-        { word: "EVREN", drawPart: "EV", doodleLabel: "house", letters: ["R", "E", "N"] },
-        { word: "BALIK", drawPart: "BAL", doodleLabel: "fish", letters: ["I", "K"] }
-    ];
-
+    let levels = [];
     let current = 0;
-    let isDrawing = false;
     let classifier;
+    let inputRefs = [];
+    let currentDoodleLabel = "";
+    let isDrawing = false;
 
-    // AI MODELİNİ BAŞLAT
+    // 1. ML5.JS MODELİNİ BAŞLAT
     async function setupML() {
-        try {
-            classifier = await ml5.imageClassifier('DoodleNet');
+        classifier = await ml5.imageClassifier('DoodleNet', () => {
             document.getElementById('status').innerText = "HAZIR";
-            console.log("Model Yüklendi!");
-        } catch (error) {
-            console.error("Model yüklenemedi:", error);
-            document.getElementById('status').innerText = "HATA!";
+            loadLevels();
+        });
+    }
+
+    // 2. JSON VERİSİNİ ÇEK
+    async function loadLevels() {
+        try {
+            const res = await fetch('levels.json');
+            levels = await res.json();
+            init();
+        } catch (e) {
+            console.error("JSON Hatası:", e);
+            document.getElementById('target').innerText = "HATA!";
         }
     }
 
+    // 3. OYUN ALANINI OLUŞTUR
     function init() {
+        if (levels.length === 0) return;
         const data = levels[current];
         const row = document.getElementById('game-row');
         document.getElementById('target').innerText = data.word;
         row.innerHTML = '';
+        inputRefs = [];
 
-        // Çizim Kutusu
-        const cBox = document.createElement('div');
-        cBox.className = 'canvas-box';
-        cBox.innerHTML = `<canvas id="cvs"></canvas><div style="position:absolute; bottom:5px; width:100%; font-size:8px; color:#aaa; pointer-events:none;">"${data.drawPart}" ÇİZ</div>`;
-        row.appendChild(cBox);
-
-        // Harf Kutuları
-        data.letters.forEach((char, i) => {
-            const lBox = document.createElement('div');
-            lBox.className = 'letter-box';
-            lBox.innerHTML = `<input type="text" id="L${i}" maxlength="1" autocomplete="off"><span class="box-label">HARF</span>`;
-            row.appendChild(lBox);
+        data.segments.forEach(seg => {
+            if (seg.type === "draw") {
+                const cBox = document.createElement('div');
+                cBox.className = 'canvas-box';
+                cBox.innerHTML = `<canvas id="cvs"></canvas><div style="position:absolute; bottom:5px; width:100%; font-size:8px; color:#aaa; pointer-events:none;">"${seg.value}" ÇİZ</div>`;
+                row.appendChild(cBox);
+                currentDoodleLabel = seg.label;
+                setupCanvas();
+            } else {
+                seg.value.split('').forEach(char => {
+                    const lBox = document.createElement('div');
+                    lBox.className = 'letter-box';
+                    const id = `L${inputRefs.length}`;
+                    lBox.innerHTML = `<input type="text" id="${id}" maxlength="1" autocomplete="off"><span class="box-label">HARF</span>`;
+                    row.appendChild(lBox);
+                    inputRefs.push({ id, correct: char.toUpperCase() });
+                });
+            }
         });
-
-        setupCanvas();
     }
 
     function setupCanvas() {
         const c = document.getElementById('cvs');
+        if (!c) return;
         const ctx = c.getContext('2d');
-        
-        // AI için ideal kare boyutu
-        c.width = 280; 
-        c.height = 280;
-
-        ctx.fillStyle = "white";
-        ctx.fillRect(0, 0, c.width, c.height);
-        ctx.strokeStyle = "black";
-        ctx.lineWidth = 14; 
-        ctx.lineCap = "round";
-        ctx.lineJoin = "round";
+        c.width = 280; c.height = 280;
+        ctx.fillStyle = "white"; ctx.fillRect(0,0,280,280);
+        ctx.strokeStyle = "black"; ctx.lineWidth = 12; ctx.lineCap = "round";
 
         const getPos = (e) => {
             const r = c.getBoundingClientRect();
             const clientX = e.touches ? e.touches[0].clientX : e.clientX;
             const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-            // Ekranda görünen boyuttan (140px) gerçek boyuta (280px) oranla
-            return {
-                x: (clientX - r.left) * (c.width / r.width),
-                y: (clientY - r.top) * (c.height / r.height)
-            };
+            return { x: (clientX - r.left) * (280 / r.width), y: (clientY - r.top) * (280 / r.height) };
         };
 
-        const start = (e) => { isDrawing = true; ctx.beginPath(); const p = getPos(e); ctx.moveTo(p.x, p.y); };
-        const move = (e) => { if(!isDrawing) return; const p = getPos(e); ctx.lineTo(p.x, p.y); ctx.stroke(); };
-        const stop = () => isDrawing = false;
-
-        c.addEventListener('mousedown', start);
-        c.addEventListener('mousemove', move);
-        window.addEventListener('mouseup', stop);
-
-        c.addEventListener('touchstart', (e) => { start(e); e.preventDefault(); }, {passive: false});
-        c.addEventListener('touchmove', (e) => { move(e); e.preventDefault(); }, {passive: false});
-        c.addEventListener('touchend', stop);
+        c.onmousedown = c.ontouchstart = (e) => { isDrawing = true; ctx.beginPath(); const p = getPos(e); ctx.moveTo(p.x, p.y); if(e.cancelable) e.preventDefault(); };
+        c.onmousemove = c.ontouchmove = (e) => { if(!isDrawing) return; const p = getPos(e); ctx.lineTo(p.x, p.y); ctx.stroke(); };
+        window.onmouseup = window.ontouchend = () => isDrawing = false;
     }
 
-    // ANA KONTROL FONKSİYONU
+    // 4. KONTROL MEKANİZMASI
     async function check() {
-    if (!classifier) {
-        alert("Yapay zeka henüz yüklenmedi!");
-        return;
+        if (!classifier) return;
+
+        // Harf Kontrolü
+        let lettersOk = inputRefs.every(ref => document.getElementById(ref.id).value.toUpperCase() === ref.correct);
+        if (!lettersOk) { alert("Harfler Yanlış!"); return; }
+
+        // Çizim Kontrolü
+        const results = await classifier.classify(document.getElementById('cvs'));
+        // İlk 3 tahminde var mı diye bak (Daha esnek bir oyun için)
+        const drawingOk = results.slice(0, 3).some(r => r.label === currentDoodleLabel);
+
+        if (drawingOk) {
+            alert("Doğru!");
+            current = (current + 1) % levels.length;
+            init();
+        } else {
+            alert("Yanlış Çizim!");
+        }
     }
 
-    const data = levels[current];
-    
-    // 1. Harf Kontrolü
-    let lettersCorrect = true;
-    data.letters.forEach((char, i) => {
-        const val = document.getElementById(`L${i}`).value.toUpperCase();
-        if(val !== char) lettersCorrect = false;
-    });
-
-    if(!lettersCorrect) {
-        alert("Harfler Yanlış!"); // Sadece direkt mesaj
-        return;
-    }
-
-    // 2. Çizim Kontrolü
-    const canvas = document.getElementById('cvs');
-    const results = await classifier.classify(canvas);
-    
-    const topResult = results[0].label;
-    // Konsolda ne gördüğünü hala takip edebilirsin (hata ayıklamak için)
-    console.log("AI Tahmini:", topResult);
-
-    if (topResult === data.doodleLabel) {
-        alert("Doğru!"); // Sadece direkt mesaj
-        current = (current + 1) % levels.length;
-        init();
-    } else {
-        alert("Yanlış Çizim!"); // Karmaşık cümle yerine direkt mesaj
-    }
-}
-
-    function clearDraw() { 
+    function clearDraw() {
         const c = document.getElementById('cvs');
-        const ctx = c.getContext('2d');
-        ctx.fillStyle = "white";
-        ctx.fillRect(0,0,c.width,c.height);
+        if(c) c.getContext('2d').fillRect(0,0,280,280);
     }
 
     function playAd() {
-        const ad = document.getElementById('ad-view');
-        ad.style.display = 'flex';
-        let count = 3;
-        const t = setInterval(() => {
-            count--; document.getElementById('ad-sec').innerText = count;
-            if(count <= 0) { clearInterval(t); ad.style.display = 'none'; getHint(); }
-        }, 1000);
-    }
-
-    function getHint() {
-        const data = levels[current];
-        for(let i=0; i<data.letters.length; i++) {
-            const input = document.getElementById(`L${i}`);
-            if(input.value.toUpperCase() !== data.letters[i]) {
-                input.value = data.letters[i];
-                input.style.color = "var(--hint)";
+        // İpucu mantığı: İlk boş veya yanlış kutuyu doldur
+        for (let ref of inputRefs) {
+            let el = document.getElementById(ref.id);
+            if (el.value.toUpperCase() !== ref.correct) {
+                el.value = ref.correct;
+                el.style.color = "var(--hint)";
                 break;
             }
         }
     }
 
     setupML();
-    init();
 </script>
 </body>
 </html>
