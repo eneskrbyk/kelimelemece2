@@ -17,21 +17,24 @@
         * { box-sizing: border-box; touch-action: none; font-family: 'Arial Rounded MT Bold', sans-serif; }
         body { margin: 0; background: var(--bg); color: #fff; display: flex; align-items: center; justify-content: center; height: 100vh; overflow: hidden; }
 
-        <!-- ANA MENÜ EKRANI -->
-<div id="main-menu">
-    <h1 style="color: var(--accent); font-size: 2.5rem; margin-bottom: 30px;">KELİME <br> BİLMECESİ</h1>
-    <div class="menu-buttons">
-        <button class="btn-check" onclick="startGame()">OYUNA BAŞLA</button>
-        <button class="btn-check" style="background: #475569; box-shadow: 0 8px 0 #1e293b; margin-top: 15px;">AYARLAR</button>
-        <button class="btn-check" style="background: #475569; box-shadow: 0 8px 0 #1e293b; margin-top: 15px;">DİL SEÇİMİ</button>
-    </div>
-    <p style="margin-top: 40px; color: #94a3b8; font-size: 0.8rem;">V1.0 - Powered by AI</p>
-</div>
-        
+        #main-menu {
+            position: fixed;
+            inset: 0;
+            background: var(--bg);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 20px;
+            text-align: center;
+        }
+
         #game-container {
             width: 92%; max-width: 460px; background: var(--card);
             padding: 25px; border-radius: 45px; text-align: center;
             box-shadow: 0 30px 60px rgba(0,0,0,0.6);
+            display: none; /* Başlangıçta gizli */
         }
 
         .header { display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--primary); font-weight: bold; margin-bottom: 10px; }
@@ -70,45 +73,33 @@
             cursor: pointer; box-shadow: 0 8px 0 #4834d4;
         }
 
+        .menu-buttons { width: 100%; max-width: 300px; }
+
         .hint-btn {
             margin-top: 15px; background: rgba(255,159,67,0.1);
             border: 1px dashed var(--hint); padding: 10px; border-radius: 15px;
             color: var(--hint); font-size: 0.8rem; cursor: pointer;
         }
-        
-        #main-menu {
-    position: fixed;
-    inset: 0;
-    background: var(--bg);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    z-index: 1000;
-    padding: 20px;
-    text-align: center;
-}
-
-#game-container {
-    display: none; /* Başlangıçta gizli */
-}
-
-.menu-buttons {
-    width: 100%;
-    max-width: 300px;
-}
-        
     </style>
 </head>
 <body>
+
+<!-- ANA MENÜ EKRANI (Burada durmalı) -->
+<div id="main-menu">
+    <h1 style="color: var(--accent); font-size: 2.5rem; margin-bottom: 30px;">KELİME <br> BİLMECESİ</h1>
+    <div class="menu-buttons">
+        <button class="btn-check" onclick="startGame()">OYUNA BAŞLA</button>
+        <button class="btn-check" style="background: #475569; box-shadow: 0 8px 0 #1e293b; margin-top: 15px;">AYARLAR</button>
+        <button class="btn-check" style="background: #475569; box-shadow: 0 8px 0 #1e293b; margin-top: 15px;">DİL SEÇİMİ</button>
+    </div>
+    <p style="margin-top: 40px; color: #94a3b8; font-size: 0.8rem;">V1.0 - Powered by AI</p>
+</div>
 
 <div id="game-container">
     <div class="header"><span id="status">YÜKLENİYOR...</span><span>∞</span></div>
     <div class="target-word" id="target">YÜKLENİYOR</div>
     <div class="instruction">Çizimi yap ve harfleri tamamla!</div>
-
     <div class="game-row" id="game-row"></div>
-
     <button class="btn-check" onclick="check()">KONTROL ET</button>
     <div class="hint-btn" onclick="playAd()">📺 İpucu Al</div>
     <p style="color:#64748b; font-size:0.7rem; margin-top:15px; cursor:pointer;" onclick="clearDraw()">Çizimi Temizle</p>
@@ -123,17 +114,13 @@
     let isDrawing = false;
 
     function startGame() {
-    // Menüyü gizle, oyunu göster
-    document.getElementById('main-menu').style.display = 'none';
-    document.getElementById('game-container').style.display = 'block';
-    
-    // Eğer model hazırsa ilk bölümü başlat (zaten setupML içinde tetikleniyor ama garanti olsun)
-    if (levels.length > 0) {
-        init();
+        document.getElementById('main-menu').style.display = 'none';
+        document.getElementById('game-container').style.display = 'block';
+        if (levels.length > 0) {
+            init();
+        }
     }
-}
 
-    // 1. ML5.JS MODELİNİ BAŞLAT
     async function setupML() {
         classifier = await ml5.imageClassifier('DoodleNet', () => {
             document.getElementById('status').innerText = "HAZIR";
@@ -141,19 +128,16 @@
         });
     }
 
-    // 2. JSON VERİSİNİ ÇEK
     async function loadLevels() {
         try {
             const res = await fetch('levels.json');
             levels = await res.json();
-            init();
         } catch (e) {
             console.error("JSON Hatası:", e);
             document.getElementById('target').innerText = "HATA!";
         }
     }
 
-    // 3. OYUN ALANINI OLUŞTUR
     function init() {
         if (levels.length === 0) return;
         const data = levels[current];
@@ -203,19 +187,12 @@
         window.onmouseup = window.ontouchend = () => isDrawing = false;
     }
 
-    // 4. KONTROL MEKANİZMASI
     async function check() {
         if (!classifier) return;
-
-        // Harf Kontrolü
         let lettersOk = inputRefs.every(ref => document.getElementById(ref.id).value.toUpperCase() === ref.correct);
         if (!lettersOk) { alert("Harfler Yanlış!"); return; }
-
-        // Çizim Kontrolü
         const results = await classifier.classify(document.getElementById('cvs'));
-        // İlk 3 tahminde var mı diye bak (Daha esnek bir oyun için)
         const drawingOk = results.slice(0, 3).some(r => r.label === currentDoodleLabel);
-
         if (drawingOk) {
             alert("Doğru!");
             current = (current + 1) % levels.length;
@@ -231,7 +208,6 @@
     }
 
     function playAd() {
-        // İpucu mantığı: İlk boş veya yanlış kutuyu doldur
         for (let ref of inputRefs) {
             let el = document.getElementById(ref.id);
             if (el.value.toUpperCase() !== ref.correct) {
