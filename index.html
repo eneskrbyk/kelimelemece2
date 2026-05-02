@@ -17,6 +17,17 @@
         * { box-sizing: border-box; touch-action: none; font-family: 'Arial Rounded MT Bold', sans-serif; }
         body { margin: 0; background: var(--bg); color: #fff; display: flex; align-items: center; justify-content: center; height: 100vh; overflow: hidden; }
 
+        <!-- ANA MENÜ EKRANI -->
+<div id="main-menu">
+    <h1 style="color: var(--accent); font-size: 2.5rem; margin-bottom: 30px;">KELİME <br> BİLMECESİ</h1>
+    <div class="menu-buttons">
+        <button class="btn-check" onclick="startGame()">OYUNA BAŞLA</button>
+        <button class="btn-check" style="background: #475569; box-shadow: 0 8px 0 #1e293b; margin-top: 15px;">AYARLAR</button>
+        <button class="btn-check" style="background: #475569; box-shadow: 0 8px 0 #1e293b; margin-top: 15px;">DİL SEÇİMİ</button>
+    </div>
+    <p style="margin-top: 40px; color: #94a3b8; font-size: 0.8rem;">V1.0 - Powered by AI</p>
+</div>
+        
         #game-container {
             width: 92%; max-width: 460px; background: var(--card);
             padding: 25px; border-radius: 45px; text-align: center;
@@ -64,6 +75,29 @@
             border: 1px dashed var(--hint); padding: 10px; border-radius: 15px;
             color: var(--hint); font-size: 0.8rem; cursor: pointer;
         }
+        
+        #main-menu {
+    position: fixed;
+    inset: 0;
+    background: var(--bg);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 20px;
+    text-align: center;
+}
+
+#game-container {
+    display: none; /* Başlangıçta gizli */
+}
+
+.menu-buttons {
+    width: 100%;
+    max-width: 300px;
+}
+        
     </style>
 </head>
 <body>
@@ -87,6 +121,17 @@
     let inputRefs = [];
     let currentDoodleLabel = "";
     let isDrawing = false;
+
+    function startGame() {
+    // Menüyü gizle, oyunu göster
+    document.getElementById('main-menu').style.display = 'none';
+    document.getElementById('game-container').style.display = 'block';
+    
+    // Eğer model hazırsa ilk bölümü başlat (zaten setupML içinde tetikleniyor ama garanti olsun)
+    if (levels.length > 0) {
+        init();
+    }
+}
 
     // 1. ML5.JS MODELİNİ BAŞLAT
     async function setupML() {
