@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Resimli Kelime Oyunu AI</title>
+    <title>Kelimelemece!</title>
     <script src="https://unpkg.com/ml5@latest/dist/ml5.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
     
@@ -28,17 +28,26 @@
 
         /* OYUN ALANI */
         #game-container {
-            width: 92%; max-width: 460px; background: var(--card);
+            width: 92%; max-width: 480px; background: var(--card);
             padding: 25px; border-radius: 45px; text-align: center;
             box-shadow: 0 30px 60px rgba(0,0,0,0.6);
             display: none;
+            position: relative;
+        }
+
+        /* Menüye Dönüş Butonu (Sol Üst) */
+        .home-btn {
+            position: absolute; top: 20px; left: 20px;
+            background: rgba(255,255,255,0.1); border: none;
+            color: #fff; padding: 8px 12px; border-radius: 12px;
+            cursor: pointer; font-size: 0.7rem; font-weight: bold;
         }
 
         .target-word { font-size: 3rem; font-weight: 900; color: var(--accent); margin: 0; text-transform: uppercase; letter-spacing: 2px; }
         
         .game-row {
             display: flex; flex-direction: row; justify-content: center;
-            align-items: flex-end; gap: 8px; margin-bottom: 25px; flex-wrap: wrap;
+            align-items: center; gap: 10px; margin-bottom: 25px; flex-wrap: wrap;
         }
 
         .fade-anim { animation: fade 0.6s ease-out; }
@@ -47,21 +56,20 @@
             100% { opacity: 1; transform: scale(1); }
         }
 
-        .canvas-box {
-            background: #fff; border: 4px solid var(--primary);
-            border-radius: 20px; width: 120px; height: 120px;
-            position: relative; flex-shrink: 0; overflow: hidden;
+        /* Karelerin Eşitlenmesi */
+        .canvas-box, .letter-box {
+            width: 80px; height: 80px;
+            border-radius: 20px; flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 5px 0 rgba(0,0,0,0.2);
         }
+
+        .canvas-box { background: #fff; border: 4px solid var(--primary); position: relative; overflow: hidden; }
         canvas { width: 100%; height: 100%; cursor: crosshair; }
 
-        .letter-box {
-            background: #fff; width: 55px; height: 90px;
-            border-radius: 18px; display: flex; flex-direction: column;
-            justify-content: center; align-items: center; box-shadow: 0 5px 0 #cbd5e1;
-        }
-
+        .letter-box { background: #fff; }
         .letter-box input {
-            width: 80%; border: none; border-bottom: 3px solid var(--primary);
+            width: 90%; border: none; border-bottom: 3px solid var(--primary);
             text-align: center; font-size: 1.8rem; font-weight: bold;
             color: #2d3436; outline: none; background: transparent;
         }
@@ -92,7 +100,7 @@
 <body>
 
 <div id="main-menu">
-    <h1 style="color: var(--accent); font-size: 2.5rem; margin-bottom: 30px;">KELİMELEMECE!</h1>
+    <h1 style="color: var(--accent); font-size: 2.5rem; margin-bottom: 30px;">Kelimelemece!</h1>
     <div style="width: 100%; max-width: 300px;">
         <button class="btn-check" onclick="startGame()">OYUNA BAŞLA</button>
         <button class="btn-check" style="background: #475569; box-shadow: 0 8px 0 #1e293b; margin-top: 15px;">AYARLAR</button>
@@ -108,11 +116,12 @@
 </div>
 
 <div id="game-container">
-    <div style="display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--primary); font-weight: bold; margin-bottom: 10px;">
-        <span id="status">YÜKLENİYOR...</span><span>∞</span>
+    <button class="home-btn" onclick="goToMenu()">🏠 Menü</button>
+    <div style="display: flex; justify-content: flex-end; font-size: 0.8rem; color: var(--primary); font-weight: bold; margin-bottom: 10px;">
+        <span id="status">YÜKLENİYOR...</span>
     </div>
     <div class="target-word" id="target">...</div>
-    <p style="color: #94a3b8; font-weight: bold; margin: 10px 0 20px 0;">Aşağıdaki kutulara bu kelimeyi sığdırabilir misin?</p>
+    <p style="color: #94a3b8; font-weight: bold; margin: 10px 0 20px 0;">aşağıdaki kutulara bu kelimeyi sığdırabilir misin?</p>
     <div class="game-row" id="game-row"></div>
     <button class="btn-check" onclick="check()">KONTROL ET</button>
     <div style="margin-top: 15px; background: rgba(255,159,67,0.1); border: 1px dashed var(--hint); padding: 10px; border-radius: 15px; color: var(--hint); cursor: pointer;" onclick="playAd()">📺 İpucu Al</div>
@@ -142,6 +151,11 @@
         init();
     }
 
+    function goToMenu() {
+        document.getElementById('game-container').style.display = 'none';
+        document.getElementById('main-menu').style.display = 'flex';
+    }
+
     function init() {
         if (levels.length === 0) return;
         const data = levels[current];
@@ -158,7 +172,8 @@
             if (seg.type === "draw") {
                 const cBox = document.createElement('div');
                 cBox.className = 'canvas-box';
-                cBox.innerHTML = `<canvas id="cvs"></canvas><div style="position:absolute; bottom:5px; width:100%; font-size:8px; color:#aaa; pointer-events:none;">"${seg.value}" ÇİZ</div>`;
+                // İpucu yazısı (seg.value) kaldırıldı
+                cBox.innerHTML = `<canvas id="cvs"></canvas>`;
                 row.appendChild(cBox);
                 currentDoodleLabel = seg.label;
                 setupCanvas();
@@ -203,15 +218,11 @@
         const drawingOk = results.slice(0, 3).some(r => r.label === currentDoodleLabel);
 
         if (drawingOk) {
-            // İlk Patlama
             confetti({ particleCount: 200, spread: 80, origin: { y: 0.6 } });
-
-            // Gecikmeli Bingo Kartı
             setTimeout(() => {
                 document.getElementById('success-msg').innerText = `"${levels[current].word}" kelimesini bildin!`;
                 document.getElementById('success-card').style.display = 'flex';
                 
-                // Arka plan konfeti döngüsü
                 var end = Date.now() + 2000;
                 (function frame() {
                     confetti({ particleCount: 2, angle: 60, spread: 55, origin: { x: 0 }, colors: ['#00d2d3', '#6c5ce7'] });
