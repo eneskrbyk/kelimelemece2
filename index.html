@@ -19,23 +19,20 @@
         * { box-sizing: border-box; touch-action: none; font-family: 'Arial Rounded MT Bold', sans-serif; }
         body { margin: 0; background: var(--bg); color: #fff; display: flex; align-items: center; justify-content: center; height: 100vh; overflow: hidden; }
 
-        /* ANA MENÜ */
         #main-menu {
             position: fixed; inset: 0; background: var(--bg);
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             z-index: 1000; padding: 20px; text-align: center;
         }
 
-        /* OYUN ALANI */
         #game-container {
-            width: 92%; max-width: 480px; background: var(--card);
-            padding: 25px; border-radius: 45px; text-align: center;
+            width: 95%; max-width: 500px; background: var(--card);
+            padding: 30px 20px; border-radius: 45px; text-align: center;
             box-shadow: 0 30px 60px rgba(0,0,0,0.6);
             display: none;
             position: relative;
         }
 
-        /* Menüye Dönüş Butonu (Sol Üst) */
         .home-btn {
             position: absolute; top: 20px; left: 20px;
             background: rgba(255,255,255,0.1); border: none;
@@ -43,11 +40,11 @@
             cursor: pointer; font-size: 0.7rem; font-weight: bold;
         }
 
-        .target-word { font-size: 3rem; font-weight: 900; color: var(--accent); margin: 0; text-transform: uppercase; letter-spacing: 2px; }
+        .target-word { font-size: 3.5rem; font-weight: 900; color: var(--accent); margin: 0; text-transform: uppercase; letter-spacing: 2px; }
         
         .game-row {
             display: flex; flex-direction: row; justify-content: center;
-            align-items: center; gap: 10px; margin-bottom: 25px; flex-wrap: wrap;
+            align-items: center; gap: 10px; margin: 30px 0; flex-wrap: wrap;
         }
 
         .fade-anim { animation: fade 0.6s ease-out; }
@@ -56,21 +53,27 @@
             100% { opacity: 1; transform: scale(1); }
         }
 
-        /* Karelerin Eşitlenmesi */
-        .canvas-box, .letter-box {
-            width: 80px; height: 80px;
+        /* Çizim Alanı: Yükseklik harflerle aynı (100px) ama genişlik daha fazla (160px) */
+        .canvas-box {
+            background: #fff; border: 4px solid var(--primary);
+            width: 160px; height: 100px;
+            border-radius: 20px; flex-shrink: 0;
+            position: relative; overflow: hidden;
+            box-shadow: 0 5px 0 rgba(0,0,0,0.2);
+        }
+        canvas { width: 100%; height: 100%; cursor: crosshair; }
+
+        /* Harf Kutuları: Yükseklik çizim alanıyla eşitlendi */
+        .letter-box {
+            background: #fff; width: 65px; height: 100px;
             border-radius: 20px; flex-shrink: 0;
             display: flex; align-items: center; justify-content: center;
             box-shadow: 0 5px 0 rgba(0,0,0,0.2);
         }
 
-        .canvas-box { background: #fff; border: 4px solid var(--primary); position: relative; overflow: hidden; }
-        canvas { width: 100%; height: 100%; cursor: crosshair; }
-
-        .letter-box { background: #fff; }
         .letter-box input {
-            width: 90%; border: none; border-bottom: 3px solid var(--primary);
-            text-align: center; font-size: 1.8rem; font-weight: bold;
+            width: 80%; border: none; border-bottom: 3px solid var(--primary);
+            text-align: center; font-size: 2rem; font-weight: bold;
             color: #2d3436; outline: none; background: transparent;
         }
 
@@ -80,7 +83,6 @@
             cursor: pointer; box-shadow: 0 8px 0 #4834d4; transition: 0.2s;
         }
 
-        /* BAŞARI KARTI */
         #success-card {
             position: fixed; inset: 0; background: rgba(15, 23, 42, 0.95);
             display: none; flex-direction: column; align-items: center; justify-content: center;
@@ -172,7 +174,6 @@
             if (seg.type === "draw") {
                 const cBox = document.createElement('div');
                 cBox.className = 'canvas-box';
-                // İpucu yazısı (seg.value) kaldırıldı
                 cBox.innerHTML = `<canvas id="cvs"></canvas>`;
                 row.appendChild(cBox);
                 currentDoodleLabel = seg.label;
@@ -193,19 +194,37 @@
     function setupCanvas() {
         const c = document.getElementById('cvs');
         const ctx = c.getContext('2d');
-        c.width = 280; c.height = 280;
-        ctx.fillStyle = "white"; ctx.fillRect(0,0,280,280);
-        ctx.strokeStyle = "black"; ctx.lineWidth = 14; ctx.lineCap = "round";
+        const rect = c.parentElement.getBoundingClientRect();
+        // Canvas'ın dahili çözünürlüğünü kutu boyutuna göre ayarla
+        c.width = rect.width * 2; 
+        c.height = rect.height * 2;
+        
+        ctx.fillStyle = "white"; ctx.fillRect(0,0,c.width,c.height);
+        ctx.strokeStyle = "black"; ctx.lineWidth = 10; ctx.lineCap = "round";
 
         const getPos = (e) => {
             const r = c.getBoundingClientRect();
             const clientX = e.touches ? e.touches[0].clientX : e.clientX;
             const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-            return { x: (clientX - r.left) * (280/r.width), y: (clientY - r.top) * (280/r.height) };
+            return { 
+                x: (clientX - r.left) * (c.width / r.width), 
+                y: (clientY - r.top) * (c.height / r.height) 
+            };
         };
 
-        c.onmousedown = c.ontouchstart = (e) => { isDrawing = true; ctx.beginPath(); const p = getPos(e); ctx.moveTo(p.x, p.y); if(e.cancelable) e.preventDefault(); };
-        c.onmousemove = c.ontouchmove = (e) => { if(!isDrawing) return; const p = getPos(e); ctx.lineTo(p.x, p.y); ctx.stroke(); };
+        c.onmousedown = c.ontouchstart = (e) => { 
+            isDrawing = true; 
+            ctx.beginPath(); 
+            const p = getPos(e); 
+            ctx.moveTo(p.x, p.y); 
+            if(e.cancelable) e.preventDefault(); 
+        };
+        c.onmousemove = c.ontouchmove = (e) => { 
+            if(!isDrawing) return; 
+            const p = getPos(e); 
+            ctx.lineTo(p.x, p.y); 
+            ctx.stroke(); 
+        };
         window.onmouseup = window.ontouchend = () => isDrawing = false;
     }
 
@@ -241,7 +260,11 @@
 
     function clearDraw() {
         const c = document.getElementById('cvs');
-        if(c) c.getContext('2d').fillRect(0,0,280,280);
+        if(c) {
+            const ctx = c.getContext('2d');
+            ctx.fillStyle = "white";
+            ctx.fillRect(0,0,c.width,c.height);
+        }
     }
 
     function playAd() {
