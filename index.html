@@ -4,7 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Resimli Kelime Oyunu AI</title>
+    <!-- Kütüphaneler: ML5.js (AI) ve Canvas-Confetti (Efekt) -->
     <script src="https://unpkg.com/ml5@latest/dist/ml5.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+    
     <style>
         :root {
             --bg: #0f172a;
@@ -17,6 +20,7 @@
         * { box-sizing: border-box; touch-action: none; font-family: 'Arial Rounded MT Bold', sans-serif; }
         body { margin: 0; background: var(--bg); color: #fff; display: flex; align-items: center; justify-content: center; height: 100vh; overflow: hidden; }
 
+        /* ANA MENÜ EKRANI */
         #main-menu {
             position: fixed;
             inset: 0;
@@ -30,6 +34,9 @@
             text-align: center;
         }
 
+        .menu-buttons { width: 100%; max-width: 300px; }
+
+        /* OYUN ALANI */
         #game-container {
             width: 92%; max-width: 460px; background: var(--card);
             padding: 25px; border-radius: 45px; text-align: center;
@@ -44,6 +51,13 @@
         .game-row {
             display: flex; flex-direction: row; justify-content: center;
             align-items: flex-end; gap: 8px; margin-bottom: 25px; flex-wrap: wrap;
+        }
+
+        /* Geçiş Animasyonu */
+        .fade-anim { animation: fade 0.6s ease-out; }
+        @keyframes fade {
+            0% { opacity: 0; transform: scale(0.9); }
+            100% { opacity: 1; transform: scale(1); }
         }
 
         .canvas-box {
@@ -70,21 +84,31 @@
         .btn-check {
             width: 100%; padding: 20px; background: var(--primary); color: white;
             border: none; border-radius: 22px; font-size: 1.5rem; font-weight: 900;
-            cursor: pointer; box-shadow: 0 8px 0 #4834d4;
+            cursor: pointer; box-shadow: 0 8px 0 #4834d4; transition: 0.2s;
         }
-
-        .menu-buttons { width: 100%; max-width: 300px; }
+        .btn-check:active { transform: translateY(4px); box-shadow: 0 4px 0 #4834d4; }
 
         .hint-btn {
             margin-top: 15px; background: rgba(255,159,67,0.1);
             border: 1px dashed var(--hint); padding: 10px; border-radius: 15px;
             color: var(--hint); font-size: 0.8rem; cursor: pointer;
         }
+
+        /* BAŞARI KARTI */
+        #success-card {
+            position: fixed; inset: 0; background: rgba(15, 23, 42, 0.95);
+            display: none; flex-direction: column; align-items: center; justify-content: center;
+            z-index: 2000; text-align: center;
+        }
+        .card-content {
+            background: var(--card); padding: 40px; border-radius: 30px;
+            border: 3px solid var(--accent); box-shadow: 0 0 30px rgba(0, 210, 211, 0.3);
+        }
     </style>
 </head>
 <body>
 
-<!-- ANA MENÜ EKRANI (Burada durmalı) -->
+<!-- ANA MENÜ -->
 <div id="main-menu">
     <h1 style="color: var(--accent); font-size: 2.5rem; margin-bottom: 30px;">KELİMELEMECE!</h1>
     <div class="menu-buttons">
@@ -95,10 +119,20 @@
     <p style="margin-top: 40px; color: #94a3b8; font-size: 0.8rem;">V1.0 - Powered by AI</p>
 </div>
 
+<!-- BAŞARI KARTI -->
+<div id="success-card">
+    <div class="card-content">
+        <h2 style="color: var(--accent); font-size: 2.2rem; margin-bottom: 10px;">BİNGO!</h2>
+        <p id="success-msg" style="font-size: 1.2rem; margin-bottom: 25px; color: #fff;"></p>
+        <button class="btn-check" onclick="nextLevel()">SIRADAKİ KELİME ➔</button>
+    </div>
+</div>
+
+<!-- OYUN ALANI -->
 <div id="game-container">
-    <div class="header"><span id="status">YÜKLENİYOR...</span><span>∞</span></div>
-    <div class="target-word" id="target">YÜKLENİYOR</div>
-    <div class="instruction">Çizimi yap ve harfleri tamamla!</div>
+    <div class="header"><span id="status">MODEL YÜKLENİYOR...</span><span>∞</span></div>
+    <div class="target-word" id="target">...</div>
+    <div class="instruction">Resmi tamamla ve harfleri doldur!</div>
     <div class="game-row" id="game-row"></div>
     <button class="btn-check" onclick="check()">KONTROL ET</button>
     <div class="hint-btn" onclick="playAd()">📺 İpucu Al</div>
@@ -113,17 +147,10 @@
     let currentDoodleLabel = "";
     let isDrawing = false;
 
-    function startGame() {
-        document.getElementById('main-menu').style.display = 'none';
-        document.getElementById('game-container').style.display = 'block';
-        if (levels.length > 0) {
-            init();
-        }
-    }
-
+    // 1. BAŞLATMA
     async function setupML() {
         classifier = await ml5.imageClassifier('DoodleNet', () => {
-            document.getElementById('status').innerText = "HAZIR";
+            document.getElementById('status').innerText = "AI HAZIR";
             loadLevels();
         });
     }
@@ -134,14 +161,26 @@
             levels = await res.json();
         } catch (e) {
             console.error("JSON Hatası:", e);
-            document.getElementById('target').innerText = "HATA!";
         }
     }
 
+    function startGame() {
+        document.getElementById('main-menu').style.display = 'none';
+        document.getElementById('game-container').style.display = 'block';
+        init();
+    }
+
+    // 2. SEVİYE KURULUMU
     function init() {
         if (levels.length === 0) return;
         const data = levels[current];
         const row = document.getElementById('game-row');
+        
+        // Animasyonu tetikle
+        row.classList.remove('fade-anim');
+        void row.offsetWidth; 
+        row.classList.add('fade-anim');
+
         document.getElementById('target').innerText = data.word;
         row.innerHTML = '';
         inputRefs = [];
@@ -167,13 +206,14 @@
         });
     }
 
+    // 3. ÇİZİM AYARLARI
     function setupCanvas() {
         const c = document.getElementById('cvs');
         if (!c) return;
         const ctx = c.getContext('2d');
         c.width = 280; c.height = 280;
         ctx.fillStyle = "white"; ctx.fillRect(0,0,280,280);
-        ctx.strokeStyle = "black"; ctx.lineWidth = 12; ctx.lineCap = "round";
+        ctx.strokeStyle = "black"; ctx.lineWidth = 14; ctx.lineCap = "round";
 
         const getPos = (e) => {
             const r = c.getBoundingClientRect();
@@ -187,24 +227,37 @@
         window.onmouseup = window.ontouchend = () => isDrawing = false;
     }
 
+    // 4. KONTROL VE GEÇİŞ
     async function check() {
         if (!classifier) return;
         let lettersOk = inputRefs.every(ref => document.getElementById(ref.id).value.toUpperCase() === ref.correct);
         if (!lettersOk) { alert("Harfler Yanlış!"); return; }
+
         const results = await classifier.classify(document.getElementById('cvs'));
         const drawingOk = results.slice(0, 3).some(r => r.label === currentDoodleLabel);
+
         if (drawingOk) {
-            alert("Doğru!");
-            current = (current + 1) % levels.length;
-            init();
+            confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } }); 
+            document.getElementById('success-msg').innerText = `"${levels[current].word}" kelimesini tamamladın!`;
+            document.getElementById('success-card').style.display = 'flex';
         } else {
             alert("Yanlış Çizim!");
         }
     }
 
+    function nextLevel() {
+        document.getElementById('success-card').style.display = 'none';
+        current = (current + 1) % levels.length;
+        init();
+    }
+
     function clearDraw() {
         const c = document.getElementById('cvs');
-        if(c) c.getContext('2d').fillRect(0,0,280,280);
+        if(c) {
+            const ctx = c.getContext('2d');
+            ctx.fillStyle = "white";
+            ctx.fillRect(0,0,280,280);
+        }
     }
 
     function playAd() {
