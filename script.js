@@ -48,7 +48,7 @@ function initGame() {
             currentAcceptedEmojis = seg.accepted || [];
             const eBox = document.createElement('div');
             eBox.className = 'emoji-input-box';
-            eBox.innerHTML = `<input type="text" id="emoji-in" placeholder="😃" oninput="limitEmoji(this)">`;
+            eBox.innerHTML = `<input type="text" id="emoji-in" oninput="limitEmoji(this)">`;
             row.appendChild(eBox);
         } else if (seg.type === "text" || seg.type === "number") {
             seg.value.split('').forEach(char => {
