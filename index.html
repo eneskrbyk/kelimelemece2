@@ -13,24 +13,37 @@
             --card: #1e293b;
             --accent: #00d2d3;
             --primary: #6c5ce7;
-            --hint: #ff9f43;
+            --secondary: #ff9f43;
         }
 
         * { box-sizing: border-box; touch-action: none; font-family: 'Arial Rounded MT Bold', sans-serif; }
         body { margin: 0; background: var(--bg); color: #fff; display: flex; align-items: center; justify-content: center; height: 100vh; overflow: hidden; }
 
-        #main-menu {
+        /* GENEL PANEL YAPISI */
+        .panel {
             position: fixed; inset: 0; background: var(--bg);
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             z-index: 1000; padding: 20px; text-align: center;
         }
 
+        /* MOD SEÇİM EKRANI */
+        #mode-selection { display: none; background: rgba(15, 23, 42, 0.98); }
+        .mode-card {
+            width: 100%; max-width: 300px; background: var(--card);
+            padding: 20px; margin: 10px; border-radius: 25px;
+            border: 2px solid transparent; cursor: pointer;
+            transition: 0.3s;
+        }
+        .mode-card:hover { border-color: var(--accent); transform: translateY(-5px); }
+        .mode-card h3 { margin: 0; color: var(--accent); }
+        .mode-card p { font-size: 0.8rem; color: #94a3b8; margin: 5px 0 0 0; }
+
+        /* OYUN ALANI */
         #game-container {
             width: 95%; max-width: 500px; background: var(--card);
             padding: 30px 20px; border-radius: 45px; text-align: center;
             box-shadow: 0 30px 60px rgba(0,0,0,0.6);
-            display: none;
-            position: relative;
+            display: none; position: relative;
         }
 
         .home-btn {
@@ -47,125 +60,123 @@
             align-items: center; gap: 10px; margin: 30px 0; flex-wrap: wrap;
         }
 
-        .fade-anim { animation: fade 0.6s ease-out; }
-        @keyframes fade {
-            0% { opacity: 0; transform: scale(0.9); }
-            100% { opacity: 1; transform: scale(1); }
-        }
-
-        /* Çizim Alanı: Yükseklik harflerle aynı (100px) ama genişlik daha fazla (160px) */
+        /* KARELER */
         .canvas-box {
             background: #fff; border: 4px solid var(--primary);
-            width: 160px; height: 100px;
-            border-radius: 20px; flex-shrink: 0;
+            width: 160px; height: 100px; border-radius: 20px;
             position: relative; overflow: hidden;
-            box-shadow: 0 5px 0 rgba(0,0,0,0.2);
         }
-        canvas { width: 100%; height: 100%; cursor: crosshair; }
-
-        /* Harf Kutuları: Yükseklik çizim alanıyla eşitlendi */
         .letter-box {
             background: #fff; width: 65px; height: 100px;
-            border-radius: 20px; flex-shrink: 0;
-            display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 5px 0 rgba(0,0,0,0.2);
+            border-radius: 20px; display: flex; align-items: center; justify-content: center;
         }
-
         .letter-box input {
             width: 80%; border: none; border-bottom: 3px solid var(--primary);
-            text-align: center; font-size: 2rem; font-weight: bold;
-            color: #2d3436; outline: none; background: transparent;
+            text-align: center; font-size: 2rem; font-weight: bold; color: #2d3436; outline: none;
         }
 
         .btn-check {
-            width: 100%; padding: 20px; background: var(--primary); color: white;
+            width: 100%; max-width: 300px; padding: 20px; background: var(--primary); color: white;
             border: none; border-radius: 22px; font-size: 1.5rem; font-weight: 900;
-            cursor: pointer; box-shadow: 0 8px 0 #4834d4; transition: 0.2s;
+            cursor: pointer; box-shadow: 0 8px 0 #4834d4; margin-top: 10px;
         }
 
         #success-card {
             position: fixed; inset: 0; background: rgba(15, 23, 42, 0.95);
             display: none; flex-direction: column; align-items: center; justify-content: center;
-            z-index: 2000; text-align: center;
-            animation: fadeIn 0.5s ease-out;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; background: rgba(15, 23, 42, 0); }
-            to { opacity: 1; background: rgba(15, 23, 42, 0.95); }
-        }
-        .card-content {
-            background: var(--card); padding: 40px; border-radius: 30px;
-            border: 3px solid var(--accent); box-shadow: 0 0 30px rgba(0, 210, 211, 0.3);
+            z-index: 2000;
         }
     </style>
 </head>
 <body>
 
-<div id="main-menu">
-    <h1 style="color: var(--accent); font-size: 2.5rem; margin-bottom: 30px;">Kelimelemece!</h1>
-    <div style="width: 100%; max-width: 300px;">
-        <button class="btn-check" onclick="startGame()">OYUNA BAŞLA</button>
-        <button class="btn-check" style="background: #475569; box-shadow: 0 8px 0 #1e293b; margin-top: 15px;">AYARLAR</button>
-    </div>
+<!-- ANA MENÜ -->
+<div id="main-menu" class="panel">
+    <h1 style="color: var(--accent); font-size: 3rem; margin-bottom: 40px;">Kelimelemece!</h1>
+    <button class="btn-check" onclick="showModeSelection()">OYUNA BAŞLA</button>
+    <button class="btn-check" style="background: #475569; box-shadow: 0 8px 0 #1e293b;">AYARLAR</button>
 </div>
 
-<div id="success-card">
-    <div class="card-content">
-        <h2 style="color: var(--accent); font-size: 2.5rem; margin-bottom: 10px;">BİNGO!</h2>
-        <p id="success-msg" style="font-size: 1.2rem; margin-bottom: 25px;"></p>
-        <button class="btn-check" onclick="nextLevel()">SIRADAKİ KELİME ➔</button>
+<!-- MOD SEÇİMİ -->
+<div id="mode-selection" class="panel">
+    <h2 style="color: #fff; margin-bottom: 30px;">Modunu Seç Canısı</h2>
+    
+    <div class="mode-card" onclick="startLevel(1)">
+        <h3>🎨 Çizim Modu</h3>
+        <p>Eksik parçayı çiz, harfleri tamamla!</p>
     </div>
+
+    <div class="mode-card" onclick="alert('Yakında: Emoji Modu!')">
+        <h3>😍 Emoji Modu</h3>
+        <p>Doğru emojiyi bul, kelimeyi kurtar!</p>
+    </div>
+
+    <div class="mode-card" onclick="alert('Yakında: Sayı Modu!')">
+        <h3>🔢 Sayı Modu</h3>
+        <p>Gizli sayıları harflerle birleştir!</p>
+    </div>
+
+    <button class="home-btn" style="position:static; margin-top:30px;" onclick="goToMenu()">⬅ Geri Dön</button>
 </div>
 
+<!-- OYUN ALANI -->
 <div id="game-container">
     <button class="home-btn" onclick="goToMenu()">🏠 Menü</button>
     <div style="display: flex; justify-content: flex-end; font-size: 0.8rem; color: var(--primary); font-weight: bold; margin-bottom: 10px;">
-        <span id="status">YÜKLENİYOR...</span>
+        <span id="status">AI YÜKLENİYOR...</span>
     </div>
+    
     <div class="target-word" id="target">...</div>
     <p style="color: #94a3b8; font-weight: bold; margin: 10px 0 20px 0;">aşağıdaki kutulara bu kelimeyi sığdırabilir misin?</p>
+    
     <div class="game-row" id="game-row"></div>
+    
     <button class="btn-check" onclick="check()">KONTROL ET</button>
-    <div style="margin-top: 15px; background: rgba(255,159,67,0.1); border: 1px dashed var(--hint); padding: 10px; border-radius: 15px; color: var(--hint); cursor: pointer;" onclick="playAd()">📺 İpucu Al</div>
-    <p style="color:#64748b; font-size:0.7rem; margin-top:15px; cursor:pointer;" onclick="clearDraw()">Çizimi Temizle</p>
+    <p style="color:#64748b; font-size:0.7rem; margin-top:20px; cursor:pointer;" onclick="clearDraw()">Çizimi Temizle</p>
+</div>
+
+<!-- BAŞARI EKRANI -->
+<div id="success-card">
+    <div style="background: var(--card); padding: 40px; border-radius: 30px; border: 3px solid var(--accent); text-align: center;">
+        <h2 style="color: var(--accent); font-size: 2.5rem;">BİNGO!</h2>
+        <p id="success-msg" style="margin-bottom: 25px;"></p>
+        <button class="btn-check" onclick="nextLevel()">SIRADAKİ ➔</button>
+    </div>
 </div>
 
 <script>
-    let levels = [], current = 0, classifier, inputRefs = [], currentDoodleLabel = "", isDrawing = false;
+    let currentMode = 1;
+    let levels = [], currentIdx = 0, classifier, inputRefs = [], currentDoodleLabel = "", isDrawing = false;
 
     async function setupML() {
         classifier = await ml5.imageClassifier('DoodleNet', () => {
             document.getElementById('status').innerText = "AI HAZIR";
-            loadLevels();
         });
+        // Örnek seviye datası (Normalde levels.json'dan gelir)
+        levels = [{ word: "ELMA", segments: [{type: "draw", label: "hand"}, {type: "text", value: "ma"}] }];
     }
 
-    async function loadLevels() {
-        try {
-            const res = await fetch('levels.json');
-            levels = await res.json();
-        } catch (e) { console.error("JSON Hatası:", e); }
-    }
-
-    function startGame() {
+    function showModeSelection() {
         document.getElementById('main-menu').style.display = 'none';
+        document.getElementById('mode-selection').style.display = 'flex';
+    }
+
+    function startLevel(mode) {
+        currentMode = mode;
+        document.getElementById('mode-selection').style.display = 'none';
         document.getElementById('game-container').style.display = 'block';
-        init();
+        initGame();
     }
 
     function goToMenu() {
         document.getElementById('game-container').style.display = 'none';
+        document.getElementById('mode-selection').style.display = 'none';
         document.getElementById('main-menu').style.display = 'flex';
     }
 
-    function init() {
-        if (levels.length === 0) return;
-        const data = levels[current];
+    function initGame() {
+        const data = levels[currentIdx];
         const row = document.getElementById('game-row');
-        row.classList.remove('fade-anim');
-        void row.offsetWidth; 
-        row.classList.add('fade-anim');
-
         document.getElementById('target').innerText = data.word;
         row.innerHTML = '';
         inputRefs = [];
@@ -193,12 +204,10 @@
 
     function setupCanvas() {
         const c = document.getElementById('cvs');
+        if(!c) return;
         const ctx = c.getContext('2d');
         const rect = c.parentElement.getBoundingClientRect();
-        // Canvas'ın dahili çözünürlüğünü kutu boyutuna göre ayarla
-        c.width = rect.width * 2; 
-        c.height = rect.height * 2;
-        
+        c.width = rect.width * 2; c.height = rect.height * 2;
         ctx.fillStyle = "white"; ctx.fillRect(0,0,c.width,c.height);
         ctx.strokeStyle = "black"; ctx.lineWidth = 10; ctx.lineCap = "round";
 
@@ -206,74 +215,31 @@
             const r = c.getBoundingClientRect();
             const clientX = e.touches ? e.touches[0].clientX : e.clientX;
             const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-            return { 
-                x: (clientX - r.left) * (c.width / r.width), 
-                y: (clientY - r.top) * (c.height / r.height) 
-            };
+            return { x: (clientX - r.left) * (c.width / r.width), y: (clientY - r.top) * (c.height / r.height) };
         };
 
-        c.onmousedown = c.ontouchstart = (e) => { 
-            isDrawing = true; 
-            ctx.beginPath(); 
-            const p = getPos(e); 
-            ctx.moveTo(p.x, p.y); 
-            if(e.cancelable) e.preventDefault(); 
-        };
-        c.onmousemove = c.ontouchmove = (e) => { 
-            if(!isDrawing) return; 
-            const p = getPos(e); 
-            ctx.lineTo(p.x, p.y); 
-            ctx.stroke(); 
-        };
+        c.onmousedown = c.ontouchstart = (e) => { isDrawing = true; ctx.beginPath(); const p = getPos(e); ctx.moveTo(p.x, p.y); };
+        c.onmousemove = c.ontouchmove = (e) => { if(!isDrawing) return; const p = getPos(e); ctx.lineTo(p.x, p.y); ctx.stroke(); };
         window.onmouseup = window.ontouchend = () => isDrawing = false;
     }
 
     async function check() {
-        if (!classifier) return;
-        let lettersOk = inputRefs.every(ref => document.getElementById(ref.id).value.toUpperCase() === ref.correct);
-        if (!lettersOk) { alert("Harfler Yanlış!"); return; }
+        if (currentMode === 1) {
+            let lettersOk = inputRefs.every(ref => document.getElementById(ref.id).value.toUpperCase() === ref.correct);
+            if (!lettersOk) return alert("Harfler Yanlış!");
 
-        const results = await classifier.classify(document.getElementById('cvs'));
-        const drawingOk = results.slice(0, 3).some(r => r.label === currentDoodleLabel);
-
-        if (drawingOk) {
-            confetti({ particleCount: 200, spread: 80, origin: { y: 0.6 } });
-            setTimeout(() => {
-                document.getElementById('success-msg').innerText = `"${levels[current].word}" kelimesini bildin!`;
+            const res = await classifier.classify(document.getElementById('cvs'));
+            if (res.slice(0, 3).some(r => r.label === currentDoodleLabel)) {
+                confetti({ particleCount: 150 });
+                document.getElementById('success-msg').innerText = "Harika bir çizim!";
                 document.getElementById('success-card').style.display = 'flex';
-                
-                var end = Date.now() + 2000;
-                (function frame() {
-                    confetti({ particleCount: 2, angle: 60, spread: 55, origin: { x: 0 }, colors: ['#00d2d3', '#6c5ce7'] });
-                    confetti({ particleCount: 2, angle: 120, spread: 55, origin: { x: 1 }, colors: ['#00d2d3', '#6c5ce7'] });
-                    if (Date.now() < end) requestAnimationFrame(frame);
-                }());
-            }, 1500);
-        } else { alert("Yanlış Çizim!"); }
-    }
-
-    function nextLevel() {
-        document.getElementById('success-card').style.display = 'none';
-        current = (current + 1) % levels.length;
-        init();
+            } else { alert("AI bu çizimi tanıyamadı, tekrar dene!"); }
+        }
     }
 
     function clearDraw() {
         const c = document.getElementById('cvs');
-        if(c) {
-            const ctx = c.getContext('2d');
-            ctx.fillStyle = "white";
-            ctx.fillRect(0,0,c.width,c.height);
-        }
-    }
-
-    function playAd() {
-        for (let ref of inputRefs) {
-            let el = document.getElementById(ref.id);
-            if (el.value.toUpperCase() !== ref.correct) {
-                el.value = ref.correct; el.style.color = "var(--hint)"; break;
-            }
-        }
+        if(c) c.getContext('2d').fillRect(0,0,c.width,c.height);
     }
 
     setupML();
