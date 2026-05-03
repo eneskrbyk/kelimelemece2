@@ -9,7 +9,7 @@
   { "id": 7, "word": "MAYMUN", "mode": 2, "segments": [{"type":"text","value":"M"},{"type":"emoji","label":"moon"},{"type":"text","value":"MUN"}] },
   { "id": 8, "word": "ZAKKUM", "mode": 2, "segments": [{"type":"text","value":"ZAK"},{"type":"emoji","label":"sand"}] },
 
-  { "id": 9, "word": "BEŞİK", "mode": 3, "segments": [{"type":"number","value":"5"},{"type":"text","value":"İK"}] },
-  { "id": 10, "word": "BALTIK", "mode": 3, "segments": [{"type":"text","value":"B"},{"type":"number","value":"6"},{"type":"text","value":"TIK"}] },
-  { "id": 11, "word": "BALON", "mode": 3, "segments": [{"type":"text","value":"BAL"},{"type":"number","value":"10"}] }
+  { "id": 6, "word": "ARIZA", "mode": 2, "segments": [{"type":"emoji","accepted":["🐝"]},{"type":"text","value":"ZA"}] },
+  { "id": 7, "word": "MAYMUN", "mode": 2, "segments": [{"type":"text","value":"M"},{"type":"emoji","accepted":["🌙", "🌕"]},{"type":"text","value":"MUN"}] },
+  { "id": 8, "word": "ZAKKUM", "mode": 2, "segments": [{"type":"text","value":"ZAK"},{"type":"emoji","accepted":["⏳", "🏖️"]}] }
 ]
