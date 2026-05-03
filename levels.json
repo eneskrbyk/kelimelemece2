@@ -1,7 +1,15 @@
 [
-  { "word": "ELMA", "segments": [{"type":"draw","value":"EL","label":"hand"},{"type":"text","value":"MA"}] },
-  { "word": "BARIŞ", "segments": [{"type":"text","value":"B"},{"type":"draw","value":"ARI","label":"bee"},{"type":"text","value":"Ş"}] },
-  { "word": "ATLAS", "segments": [{"type":"draw","value":"AT","label":"horse"},{"type":"text","value":"LAS"}] },
-  { "word": "AYAK", "segments": [{"type":"draw","value":"AY","label":"moon"},{"type":"text","value":"AK"}] },
-  { "word": "YAYLA", "segments": [{"type":"draw","value":"YAY","label":"bow"},{"type":"text","value":"LA"}] }
+  { "id": 1, "word": "ELMA", "mode": 1, "segments": [{"type":"draw","label":"hand"},{"type":"text","value":"MA"}] },
+  { "id": 2, "word": "BARIŞ", "mode": 1, "segments": [{"type":"text","value":"B"},{"type":"draw","label":"bee"},{"type":"text","value":"Ş"}] },
+  { "id": 3, "word": "ATLAS", "mode": 1, "segments": [{"type":"draw","label":"horse"},{"type":"text","value":"LAS"}] },
+  { "id": 4, "word": "AYAK", "mode": 1, "segments": [{"type":"draw","label":"moon"},{"type":"text","value":"AK"}] },
+  { "id": 5, "word": "YAYLA", "mode": 1, "segments": [{"type":"draw","label":"bow"},{"type":"text","value":"LA"}] },
+  
+  { "id": 6, "word": "ARIZA", "mode": 2, "segments": [{"type":"emoji","label":"bee"},{"type":"text","value":"ZA"}] },
+  { "id": 7, "word": "MAYMUN", "mode": 2, "segments": [{"type":"text","value":"M"},{"type":"emoji","label":"moon"},{"type":"text","value":"MUN"}] },
+  { "id": 8, "word": "ZAKKUM", "mode": 2, "segments": [{"type":"text","value":"ZAK"},{"type":"emoji","label":"sand"}] },
+
+  { "id": 9, "word": "BEŞİK", "mode": 3, "segments": [{"type":"number","value":"5"},{"type":"text","value":"İK"}] },
+  { "id": 10, "word": "BALTIK", "mode": 3, "segments": [{"type":"text","value":"B"},{"type":"number","value":"6"},{"type":"text","value":"TIK"}] },
+  { "id": 11, "word": "BALON", "mode": 3, "segments": [{"type":"text","value":"BAL"},{"type":"number","value":"10"}] }
 ]
