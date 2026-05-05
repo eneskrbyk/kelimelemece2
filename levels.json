@@ -10,8 +10,14 @@
   { "id": 8, "word": "ZAKKUM", "mode": 2, "segments": [{"type":"text","value":"ZAK"},{"type":"emoji","accepted":["⏳", "🏖️"]}] },
 
   { "id": 9, "word": "BEŞİK", "mode": 3, "segments": [{"type":"number","value":"5"},{"type":"text","value":"İK"}] },
-  { "id": 10, "word": "BALTIK", "mode": 3, "segments": [{"type":"text","value":"B"},{"type":"number","value":"6"},{"type":"text","value":"TIK"}] },
-  { "id": 11, "word": "BALON", "mode": 3, "segments": [{"type":"text","value":"BAL"},{"type":"number","value":"10"}] }
+  { "id": 10, "word": "BALTIK", "mode": 3, "segments": [{"type":"text","value":"B"},{"type":"number","value":"6"},{"type":"text","value":"K"}] },
+  { "id": 11, "word": "KİBİR", "mode": 3, "segments": [{"type":"text","value":"Kİ"},{"type":"number","value":"1"}] },
+  { "id": 12, "word": "BALON", "mode": 3, "segments": [{"type":"text","value":"BAL"},{"type":"number","value":"10"}] },
+  { "id": 13, "word": "TABİR", "mode": 3, "segments": [{"type":"text","value":"TA"},{"type":"number","value":"1"}] },
+  { "id": 14, "word": "DİKİZ", "mode": 3, "segments": [{"type":"text","value":"D"},{"type":"number","value":"2"},{"type":"text","value":"Z"}] },
+  { "id": 15, "word": "GÜÇ", "mode": 3, "segments": [{"type":"text","value":"G"},{"type":"number","value":"3"}] },
+  { "id": 16, "word": "KÜÇÜK", "mode": 3, "segments": [{"type":"text","value":"K"},{"type":"number","value":"3"},{"type":"text","value":"ÜK"}] },
+  { "id": 17, "word": "ALTIN", "mode": 3, "segments": [{"type":"number","value":"6"},{"type":"text","value":"N"}] }
 
 ]
 
