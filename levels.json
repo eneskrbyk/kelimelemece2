@@ -10,7 +10,7 @@
   { "id": 8, "word": "ZAKKUM", "mode": 2, "segments": [{"type":"text","value":"ZAK"},{"type":"emoji","accepted":["⏳", "🏖️"]}] },
   { "id": 19, "word": "ZAYIF", "mode": 2, "segments": [{"type":"text","value":"Z"},{"type":"emoji","accepted":["🐻","🧸"]},{"type":"text","value":"F"}] },
   { "id": 20, "word": "TARIM", "mode": 2, "segments": [{"type":"text","value":"T"},{"type":"emoji","accepted":["🐝"]},{"type":"text","value":"M"}] },
-  { "id": 12, "word": "BALON", "mode": 2, "segments": [{"type":"emoji",accepted":["🍯"]},{"type":"text","value":"ON"}] },
+  { "id": 12, "word": "BALON", "mode": 2, "segments": [{"type":"emoji","accepted":["🍯"]},{"type":"text","value":"ON"}] },
 
 
   { "id": 9, "word": "BEŞİK", "mode": 3, "segments": [{"type":"number","value":"5"},{"type":"text","value":"İK"}] },
